@@ -2,7 +2,7 @@ use leptos::*;
 use leptos_router::*;
 
 #[component]
-pub fn Home(cx: Scope) -> impl IntoView {
+pub fn Home() -> impl IntoView {
     let posts = vec![
         (1, "First Post"),
         (2, "Second Post"),
@@ -14,7 +14,7 @@ pub fn Home(cx: Scope) -> impl IntoView {
                 <li>
                     <A href=format!("/post/{}", id)>{title}</A>
                 </li>
-            }).collect_view(cx)}
+            }).collect_view()}
         </ul>
     }
 }

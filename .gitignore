@@ -416,3 +416,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# Ignore macOS files
+.DS_Store
+# Ignore Rust build directory
+target/
