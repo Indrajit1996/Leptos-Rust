@@ -8,7 +8,24 @@ async fn main() -> std::io::Result<()> {
     use leptos_meta::MetaTags;
     use leptos_actix::{generate_route_list, LeptosRoutes};
     use leptos_rust::app::*;
+    use serde::Serialize;
 
+    #[derive(Serialize)]
+    struct DataPoint {
+        id: usize,
+        text: String,
+    }
+
+    #[actix_web::get("/api/data")]
+    async fn data_api() -> impl actix_web::Responder {
+        let data: Vec<DataPoint> = (1..=100)
+            .map(|i| DataPoint {
+                id: i,
+                text: format!("Data Point #{}", i),
+            })
+            .collect();
+        actix_web::HttpResponse::Ok().json(data)
+    }
     let conf = get_configuration(None).unwrap();
     let addr = conf.leptos_options.site_addr;
 
@@ -27,6 +44,8 @@ async fn main() -> std::io::Result<()> {
             .service(Files::new("/assets", &site_root))
             // serve the favicon from /favicon.ico
             .service(favicon)
+            // api endpoint returning 100 data points
+            .service(data_api)
             .leptos_routes(routes, {
                 let leptos_options = leptos_options.clone();
                 move || {
