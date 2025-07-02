@@ -1,4 +1,6 @@
 use leptos::prelude::*;
+use reqwasm::http::Request;
+use serde::Deserialize;
 
 /// Renders the home page of your application.
 #[component]
@@ -6,9 +8,26 @@ pub fn HomePage() -> impl IntoView {
     // let count = RwSignal::new(0);
     // let on_click = move |_| *count.write() += 1;
 
-    let data_points: Vec<(usize, String)> = (1..=100)
-        .map(|i| (i, format!("Data Point #{}", i)))
-        .collect();
+    #[derive(Deserialize)]
+    struct DataPoint {
+        id: usize,
+        text: String,
+    }
+
+    let data_points = create_rw_signal(Vec::<(usize, String)>::new());
+
+    use_effect(move || {
+        let data_points = data_points.clone();
+        spawn_local(async move {
+            if let Ok(resp) = Request::get("/api/data").send().await {
+                if let Ok(fetched) = resp.json::<Vec<DataPoint>>().await {
+                    let mapped = fetched.into_iter().map(|dp| (dp.id, dp.text)).collect();
+                    data_points.set(mapped);
+                }
+            }
+        });
+        || ()
+    });
 
     view! {
         <div style="
@@ -49,11 +68,11 @@ pub fn HomePage() -> impl IntoView {
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             ">
                 <h3 style="margin-top: 0; text-align: center; color: #333;">
-                    "Data Points (100 items)"
+                    {move || format!("Data Points ({} items)", data_points.with(|d| d.len()))}
                 </h3>
                 
                 <div style="display: flex; flex-direction: column; gap: 8px;">
-                    {data_points.into_iter().map(|(index, text)| {
+                    {move || data_points.get().into_iter().map(|(index, text)| {
                         view! {
                             <div style="
                                 padding: 10px;
